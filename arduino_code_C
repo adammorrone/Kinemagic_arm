@@ -1,3 +1,5 @@
+
+
 /*
 * limbitless_v3
 *
@@ -7,76 +9,74 @@
 *
 * Desc: Basic code to allow the actuation a servo (closing of
 *       a prosthetic hand) based on bicep movement.
-*       The hand should open and close using a toggle
+*       The hand should open and close using a toggle 
  *       method.
 */
- //THIS IS A TEST OF BRANCHING YAY 
- //test 3
- 
+
 // Library for servo use
 #include <Servo.h>
- 
+
 // Digital pin for servo motor
 int servo_pin = 7;
 // Analog pin for the muscle sensor
 int muscle_pin = A0;
- 
+
 // Threshold value that allows the hand to open and close.
 // The scaled value of the muscle sensor's value is compared
 // to this threshold value.
 // Sample 6-year old was 20.0, Adult was 100.0
 float toggle_threshold = 65;
- 
+
 // Current state of the hand's position
 boolean hand_opened = true;
- 
+
 // The angle of the servo in the opened and closed states
 int opened_angle = 75, closed_angle = 0;
- 
+
 // Servo object
 Servo servo;
- 
+
 // Timer used to allow the muscle to relax before toggling the
 // hand. Prevents toggling too quickly.
 int servo_timer = 0;
- 
+
 // Maximum value of the timer value. Prevents overflow errors.
-int timer_threshold = 500;
- 
+int timer_threshold = 2000;
+
 // Sets up the system. Runs once on startup.
 void setup()
-{  
+{   
   // Uncomment this for calibration purposes.
   Serial.begin(9600);
- 
+  
   pinMode(muscle_pin, INPUT);
- 
+  
   // Assign the servo to it's respective pin
-  servo.attach(servo_pin);
+  servo.attach(servo_pin); 
   
   // Set default angle of servo as opened
   servo.write(opened_angle);
 }
- 
+
 void loop()
 {
   // Raw value of the muscle sensor reading
   float muscle_sensor_value = analogRead(muscle_pin),
   // Muscle sensor value scaled down just for easier working
         muscle_sensor_scaled = muscle_sensor_value * (180.0 / 1023.0);
- 
+  
   // Remove these before deployment.
   // Uncomment for calibration purposes.
-  // To calibrate, have the person of interest
+  // To calibrate, have the person of interest 
   // flex the desired muscle and watch where the
   // value of muscle_sensor_scaled peaks. Afterwards,
   // change the value of toggle_threshold accordingly.
-  Serial.print("\tScaled:  ");
-  Serial.print(muscle_sensor_scaled);
-  Serial.print("  Hand Opened:  #");
-  Serial.print(hand_opened);
-  Serial.println("%");
- 
+  //Serial.print("\tScaled:  ");
+  //Serial.print(muscle_sensor_scaled);
+  Serial.println("  Hand Opened:  #");
+  //Serial.print(hand_opened);
+  //Serial.println("%");
+  
   // Conditions to toggle the position of the hand.
   // 1. We are above the threshold for movement.
   // 2. The timer is at it's max value.
@@ -84,30 +84,65 @@ void loop()
   {
     // Change position of hand
     hand_opened = !hand_opened;
-   
+    
     
     if (hand_opened)
-      for(int pos = opened_angle * 2; pos > closed_angle * 2; pos-=2)
-      { // Closes the hand by gradually adjusting the written angle.    
-        servo.write(pos);
-        delay(5);
-      }
+      closeHand();
+     //Serial.println("*****************************************************************************************************************************************************************");
     else
-      for(int pos = closed_angle * 2; pos < opened_angle * 2; pos+=2)
-      { // Opens the hand by gradually adjusting the written angle.          
-        servo.write(pos);
-        delay(5);
-      }
-   
+      openHand();
+    
     // Reset the timer
     servo_timer = 0;
   }
- 
+  
   // Don't allow the servo_timer to get too big. Overflow errors
   // crash the Arduino.
   if (servo_timer < timer_threshold)
     servo_timer++;
- 
+  
   // Delay for the servo. Don't want to overload it.
   delay(1);
+}
+
+bool closeHand()
+{
+  int currentPosition = opened_angle;
+  int timeSinceLastMove = 0;
+  bool SC = false;
+  for(int pos = opened_angle * 2; pos > closed_angle * 2; pos-=2)
+      { // Closes the hand by gradually adjusting the written angle.    
+        servo.write(pos);
+        delay(5);
+
+        if(servo.read() == currentPosition)
+          timeSinceLastMove += 5;
+         if(timeSinceLastMove > 5)
+         {
+          servo.write(servo.read());
+          closed_angle = servo.read();
+          SC = true;
+          Serial.println("***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************Stall code*************************************");
+          break;
+         }
+
+         currentPosition = servo.read();
+      }
+      
+      if(SC)
+        return false;
+      
+      return true;
+}
+
+bool openHand()
+{
+  for(int pos = closed_angle * 2; pos < opened_angle * 2; pos+=2)
+      { // Opens the hand by gradually adjusting the written angle.          
+        servo.write(pos);
+        delay(5);
+      }
+      closed_angle = 0;
+      return true;
+      
 }
