@@ -3,13 +3,14 @@
 int servo_pin = 7;
 int muscle_pin = A0;
 float toggle_threshold = 65;
-int numOfDataPoints = 10; // set to number we want to gather
+int numOfDataPoints = 50; // set to number we want to gather
 int currentDP = 0;
-float arrayOfDP[10];  //use bitfield to save storage size
-float arrayOfTimes[10];
+float arrayOfDP[50];  //use bitfield to save storage size
+float arrayOfTimes[50];
 float slopeCutoff = 4;
 float lastTime = millis();
 float currentTime = millis();
+const int buttonPin = 2; 
 
 boolean hand_opened = true;
 
@@ -30,7 +31,6 @@ void setup()
 {   
   // Uncomment this for calibration purposes.
   Serial.begin(9600);
-  
   pinMode(muscle_pin, INPUT);
   
   // Assign the servo to it's respective pin
@@ -44,9 +44,9 @@ void loop()
 {
   //Serial.println("howdy");
   // Raw value of the muscle sensor reading
-  float muscle_sensor_value = analogRead(muscle_pin),
+  float muscle_sensor_value = analogRead(buttonPin),
   // Muscle sensor value scaled down just for easier working
-        muscle_sensor_scaled = muscle_sensor_value * (180.0 / 1023.0);
+        muscle_sensor_scaled = muscle_sensor_value;// * (180.0 / 1023.0);
         arrayOfDP[ currentDP ] = muscle_sensor_scaled;
         currentTime = millis();
         arrayOfTimes[currentDP] = currentTime-lastTime;
@@ -56,11 +56,11 @@ void loop()
   if( currentDP >= numOfDataPoints) 
   {
     Serial.println("Data Points:");
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < numOfDataPoints; i++)
       Serial.println(arrayOfDP[i]);
 
 Serial.println("Times:");
-      for (int i = 0; i < 10; i++)
+      for (int i = 0; i < numOfDataPoints; i++)
       Serial.println(arrayOfTimes[i]);
 
 
@@ -111,9 +111,9 @@ float slope(float muscle[], float times[])
   float denominator = 0;
   for( int i = 0; i < numOfDataPoints; i++)
   {
-    float tempCalculation = muscle[i] - musclePointsMean;
+    float tempCalculation = times[i] - timeMean;
     
-    numerator += tempCalculation * (times[i] - timeMean); 
+    numerator += tempCalculation * (muscle[i] - musclePointsMean); 
     denominator += tempCalculation*tempCalculation;
   }
 
