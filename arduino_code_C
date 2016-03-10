@@ -7,7 +7,7 @@ const int numOfDataPoints = 200; // set to number we want to gather
 int currentDP = 0;
 float arrayOfDP[numOfDataPoints];  //use bitfield to save storage size
 float arrayOfTimes[numOfDataPoints];
-float slopeCutoff = 4;
+float slopeCutoff = 2;
 float lastTime = millis();
 float currentTime = millis();
 const int buttonPin = 2;
@@ -86,16 +86,17 @@ void loop()
 
     if( slope(arrayOfDP, arrayOfTimes) > slopeCutoff) // see below for slope fuction
       {
-        hand_opened = !hand_opened;
+        //hand_opened = !hand_opened;
+        Serial.println("servo move");
         
-        
-        if (hand_opened)
           for(int pos = opened_angle * 2; pos > closed_angle * 2; pos-=2)
           { // Closes the hand by gradually adjusting the written angle.     
             servo.write(pos);
             delay(5);
           }
-        else
+          
+            delay(2500);
+       
           for(int pos = closed_angle * 2; pos < opened_angle * 2; pos+=2) 
           { // Opens the hand by gradually adjusting the written angle.           
             servo.write(pos);
@@ -104,6 +105,7 @@ void loop()
         
         // Reset the timer
         servo_timer = 0;
+        
       }
   
     currentDP = 0;
@@ -142,9 +144,9 @@ float slope(float muscle[], float times[])
   //      Serial.print("denom:         ");
   //Serial.println(denominator);
   
-  float slope = numerator/denominator;
+  float slope = abs(numerator/denominator);
   //Serial.print("Slope:         ");
- Serial.println(abs(slope));
+ Serial.println(slope);
     //  Serial.println("");
       lastTime = millis();
   return slope;
