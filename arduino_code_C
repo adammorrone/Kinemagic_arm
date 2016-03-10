@@ -3,14 +3,22 @@
 int servo_pin = 7;
 int muscle_pin = A0;
 float toggle_threshold = 65;
-int numOfDataPoints = 50; // set to number we want to gather
+const int numOfDataPoints = 200; // set to number we want to gather
 int currentDP = 0;
-float arrayOfDP[50];  //use bitfield to save storage size
-float arrayOfTimes[50];
+float arrayOfDP[numOfDataPoints];  //use bitfield to save storage size
+float arrayOfTimes[numOfDataPoints];
 float slopeCutoff = 4;
 float lastTime = millis();
 float currentTime = millis();
-const int buttonPin = 2; 
+const int buttonPin = 2;
+
+//filter
+const int numReadings = 50;
+int readings[numReadings];      // the readings from the analog input
+int readIndex = 0;              // the index of the current reading
+int total = 0;                  // the running total
+int average = 0;                // the average
+
 
 boolean hand_opened = true;
 
@@ -32,6 +40,9 @@ void setup()
   // Uncomment this for calibration purposes.
   Serial.begin(9600);
   pinMode(muscle_pin, INPUT);
+
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) 
+    readings[thisReading] = 0;
   
   // Assign the servo to it's respective pin
   servo.attach(servo_pin); 
@@ -42,12 +53,21 @@ void setup()
 
 void loop()
 {
-  //Serial.println("howdy");
-  // Raw value of the muscle sensor reading
-  float muscle_sensor_value = analogRead(buttonPin),
+  //float muscle_sensor_value = analogRead(buttonPin),
   // Muscle sensor value scaled down just for easier working
-        muscle_sensor_scaled = muscle_sensor_value;// * (180.0 / 1023.0);
-        arrayOfDP[ currentDP ] = muscle_sensor_scaled;
+        //muscle_sensor_scaled = map(muscle_sensor_value, 350, 1023, 0, 1000);
+
+       //filter
+        total = total - readings[readIndex];
+        readings[readIndex] = analogRead(buttonPin);
+        total = total + readings[readIndex];
+        readIndex = readIndex + 1;
+        if (readIndex >= numReadings)
+          readIndex = 0;
+        average = total / numReadings;
+
+        //slope
+        arrayOfDP[ currentDP ] = average;
         currentTime = millis();
         arrayOfTimes[currentDP] = currentTime-lastTime;
         lastTime = currentTime;
@@ -55,13 +75,13 @@ void loop()
       //  Serial.println(currentDP);
   if( currentDP >= numOfDataPoints) 
   {
-    Serial.println("Data Points:");
-    for (int i = 0; i < numOfDataPoints; i++)
-      Serial.println(arrayOfDP[i]);
+   // Serial.println("Data Points:");
+    //for (int i = 0; i < numOfDataPoints; i++)
+    //  Serial.println(arrayOfDP[i]);
 
-Serial.println("Times:");
-      for (int i = 0; i < numOfDataPoints; i++)
-      Serial.println(arrayOfTimes[i]);
+//Serial.println("Times:");
+    //  for (int i = 0; i < numOfDataPoints; i++)
+    //  Serial.println(arrayOfTimes[i]);
 
 
     if( slope(arrayOfDP, arrayOfTimes) > slopeCutoff) // see below for slope fuction
@@ -102,11 +122,11 @@ Serial.println("Times:");
 float slope(float muscle[], float times[])
 {
   float musclePointsMean = sum(muscle, numOfDataPoints)/numOfDataPoints;
-  Serial.print("dpMean:         ");
-  Serial.println(musclePointsMean);
+ // Serial.print("dpMean:         ");
+ // Serial.println(musclePointsMean);
   float timeMean = sum(times, numOfDataPoints)/numOfDataPoints;
-    Serial.print("timeMean:         ");
-  Serial.println(timeMean);
+  //  Serial.print("timeMean:         ");
+ // Serial.println(timeMean);
   float numerator = 0;
   float denominator = 0;
   for( int i = 0; i < numOfDataPoints; i++)
@@ -117,15 +137,15 @@ float slope(float muscle[], float times[])
     denominator += tempCalculation*tempCalculation;
   }
 
-      Serial.print("numerator:         ");
-  Serial.println(numerator);
-        Serial.print("denom:         ");
-  Serial.println(denominator);
+   //   Serial.print("numerator:         ");
+ // Serial.println(numerator);
+  //      Serial.print("denom:         ");
+  //Serial.println(denominator);
   
   float slope = numerator/denominator;
-  Serial.print("Slope:         ");
- Serial.println(slope);
-      Serial.println("");
+  //Serial.print("Slope:         ");
+ Serial.println(abs(slope));
+    //  Serial.println("");
       lastTime = millis();
   return slope;
 }
