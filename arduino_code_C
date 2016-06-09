@@ -1,13 +1,13 @@
 #include <Servo.h>
 
 int servo_pin = 7;
-int muscle_pin = A0;
+int muscle_pin = A2;
 float toggle_threshold = 65;
 const int numOfDataPoints = 200; // set to number we want to gather
 int currentDP = 0;
 float arrayOfDP[numOfDataPoints];  //use bitfield to save storage size
 float arrayOfTimes[numOfDataPoints];
-float slopeCutoff = 2;
+float slopeCutoff = 1.5;
 float lastTime = millis();
 float currentTime = millis();
 const int buttonPin = 2;
@@ -59,7 +59,7 @@ void loop()
 
        //filter
         total = total - readings[readIndex];
-        readings[readIndex] = analogRead(buttonPin);
+        readings[readIndex] = analogRead(muscle_pin);
         total = total + readings[readIndex];
         readIndex = readIndex + 1;
         if (readIndex >= numReadings)
