@@ -1,113 +1,164 @@
-/*
-* limbitless_v3
-*
-* Title: Limbitless v3
-* Author: Tyler Petresky <tylerpetresky.com>
-* Date: 7-14
-*
-* Desc: Basic code to allow the actuation a servo (closing of
-*       a prosthetic hand) based on bicep movement.
-*       The hand should open and close using a toggle
- *       method.
-*/
- //THIS IS A TEST OF BRANCHING YAY 
- //test 3
- 
-// Library for servo use
 #include <Servo.h>
- 
-// Digital pin for servo motor
+
 int servo_pin = 7;
-// Analog pin for the muscle sensor
-int muscle_pin = A0;
- 
-// Threshold value that allows the hand to open and close.
-// The scaled value of the muscle sensor's value is compared
-// to this threshold value.
-// Sample 6-year old was 20.0, Adult was 100.0
+int muscle_pin = A2;
 float toggle_threshold = 65;
- 
-// Current state of the hand's position
+const int numOfDataPoints = 200; // set to number we want to gather
+int currentDP = 0;
+float arrayOfDP[numOfDataPoints];  //use bitfield to save storage size
+float arrayOfTimes[numOfDataPoints];
+float slopeCutoff = 1.5;
+float lastTime = millis();
+float currentTime = millis();
+const int buttonPin = 2;
+
+//filter
+const int numReadings = 50;
+int readings[numReadings];      // the readings from the analog input
+int readIndex = 0;              // the index of the current reading
+int total = 0;                  // the running total
+int average = 0;                // the average
+
+
 boolean hand_opened = true;
- 
-// The angle of the servo in the opened and closed states
+
 int opened_angle = 75, closed_angle = 0;
- 
+
 // Servo object
 Servo servo;
- 
+
 // Timer used to allow the muscle to relax before toggling the
 // hand. Prevents toggling too quickly.
 int servo_timer = 0;
- 
+
 // Maximum value of the timer value. Prevents overflow errors.
 int timer_threshold = 500;
- 
+
 // Sets up the system. Runs once on startup.
 void setup()
-{  
+{   
   // Uncomment this for calibration purposes.
   Serial.begin(9600);
- 
   pinMode(muscle_pin, INPUT);
- 
+
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) 
+    readings[thisReading] = 0;
+  
   // Assign the servo to it's respective pin
-  servo.attach(servo_pin);
+  servo.attach(servo_pin); 
   
   // Set default angle of servo as opened
   servo.write(opened_angle);
 }
- 
+
 void loop()
 {
-  // Raw value of the muscle sensor reading
-  float muscle_sensor_value = analogRead(muscle_pin),
+  //float muscle_sensor_value = analogRead(buttonPin),
   // Muscle sensor value scaled down just for easier working
-        muscle_sensor_scaled = muscle_sensor_value * (180.0 / 1023.0);
- 
-  // Remove these before deployment.
-  // Uncomment for calibration purposes.
-  // To calibrate, have the person of interest
-  // flex the desired muscle and watch where the
-  // value of muscle_sensor_scaled peaks. Afterwards,
-  // change the value of toggle_threshold accordingly.
-  Serial.print("\tScaled:  ");
-  Serial.print(muscle_sensor_scaled);
-  Serial.print("  Hand Opened:  #");
-  Serial.print(hand_opened);
-  Serial.println("%");
- 
-  // Conditions to toggle the position of the hand.
-  // 1. We are above the threshold for movement.
-  // 2. The timer is at it's max value.
-  if (muscle_sensor_scaled >= toggle_threshold && servo_timer == timer_threshold)
+        //muscle_sensor_scaled = map(muscle_sensor_value, 350, 1023, 0, 1000);
+
+       //filter
+        total = total - readings[readIndex];
+        readings[readIndex] = analogRead(muscle_pin);
+        total = total + readings[readIndex];
+        readIndex = readIndex + 1;
+        if (readIndex >= numReadings)
+          readIndex = 0;
+        average = total / numReadings;
+
+        //slope
+        arrayOfDP[ currentDP ] = average;
+        currentTime = millis();
+        arrayOfTimes[currentDP] = currentTime-lastTime;
+        lastTime = currentTime;
+        currentDP++;
+      //  Serial.println(currentDP);
+  if( currentDP >= numOfDataPoints) 
   {
-    // Change position of hand
-    hand_opened = !hand_opened;
-   
-    
-    if (hand_opened)
-      for(int pos = opened_angle * 2; pos > closed_angle * 2; pos-=2)
-      { // Closes the hand by gradually adjusting the written angle.    
-        servo.write(pos);
-        delay(5);
+   // Serial.println("Data Points:");
+    //for (int i = 0; i < numOfDataPoints; i++)
+    //  Serial.println(arrayOfDP[i]);
+
+//Serial.println("Times:");
+    //  for (int i = 0; i < numOfDataPoints; i++)
+    //  Serial.println(arrayOfTimes[i]);
+
+
+    if( slope(arrayOfDP, arrayOfTimes) > slopeCutoff) // see below for slope fuction
+      {
+        //hand_opened = !hand_opened;
+        Serial.println("servo move");
+        
+          for(int pos = opened_angle * 2; pos > closed_angle * 2; pos-=2)
+          { // Closes the hand by gradually adjusting the written angle.     
+            servo.write(pos);
+            delay(5);
+          }
+          
+            delay(2500);
+       
+          for(int pos = closed_angle * 2; pos < opened_angle * 2; pos+=2) 
+          { // Opens the hand by gradually adjusting the written angle.           
+            servo.write(pos);
+            delay(5);
+          }
+        
+        // Reset the timer
+        servo_timer = 0;
+        
       }
-    else
-      for(int pos = closed_angle * 2; pos < opened_angle * 2; pos+=2)
-      { // Opens the hand by gradually adjusting the written angle.          
-        servo.write(pos);
-        delay(5);
-      }
-   
-    // Reset the timer
-    servo_timer = 0;
+  
+    currentDP = 0;
   }
- 
-  // Don't allow the servo_timer to get too big. Overflow errors
-  // crash the Arduino.
+  
   if (servo_timer < timer_threshold)
     servo_timer++;
- 
+  
   // Delay for the servo. Don't want to overload it.
   delay(1);
+
+  
+}
+
+
+float slope(float muscle[], float times[])
+{
+  float musclePointsMean = sum(muscle, numOfDataPoints)/numOfDataPoints;
+ // Serial.print("dpMean:         ");
+ // Serial.println(musclePointsMean);
+  float timeMean = sum(times, numOfDataPoints)/numOfDataPoints;
+  //  Serial.print("timeMean:         ");
+ // Serial.println(timeMean);
+  float numerator = 0;
+  float denominator = 0;
+  for( int i = 0; i < numOfDataPoints; i++)
+  {
+    float tempCalculation = times[i] - timeMean;
+    
+    numerator += tempCalculation * (muscle[i] - musclePointsMean); 
+    denominator += tempCalculation*tempCalculation;
+  }
+
+   //   Serial.print("numerator:         ");
+ // Serial.println(numerator);
+  //      Serial.print("denom:         ");
+  //Serial.println(denominator);
+  
+  float slope = abs(numerator/denominator);
+  //Serial.print("Slope:         ");
+ Serial.println(slope);
+    //  Serial.println("");
+      lastTime = millis();
+  return slope;
+}
+
+float sum(float a[], int num_elements)
+{
+   int i;
+   float sum=0;
+   for (i=0; i<num_elements; i++)
+   {
+   sum = sum + a[i];
+   }
+   return(sum);
 }
