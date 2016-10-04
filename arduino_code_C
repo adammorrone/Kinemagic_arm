@@ -1,7 +1,7 @@
 #include <Servo.h>
 
 int servo_pin = 7;
-int muscle_pin = A2;
+int muscle_pin = A1;
 float toggle_threshold = 65;
 const int numOfDataPoints = 200; // set to number we want to gather
 int currentDP = 0;
