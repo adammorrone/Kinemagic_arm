@@ -89,20 +89,12 @@ void loop()
         //hand_opened = !hand_opened;
         Serial.println("servo move");
         
-          for(int pos = opened_angle * 2; pos > closed_angle * 2; pos-=2)
-          { // Closes the hand by gradually adjusting the written angle.     
-            servo.write(pos);
-            delay(5);
-          }
-          
-            delay(2500);
+        digitalWrite(3, HIGH);
+
+        delay(1000);
+
+        digitalWrite(3, LOW);
        
-          for(int pos = closed_angle * 2; pos < opened_angle * 2; pos+=2) 
-          { // Opens the hand by gradually adjusting the written angle.           
-            servo.write(pos);
-            delay(5);
-          }
-        
         // Reset the timer
         servo_timer = 0;
         
