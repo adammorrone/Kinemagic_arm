@@ -2,6 +2,7 @@
 
 int servo_pin = 7;
 int muscle_pin = A1;
+int flexposition; 
 float toggle_threshold = 65;
 const int numOfDataPoints = 200; // set to number we want to gather
 int currentDP = 0;
@@ -11,6 +12,9 @@ float slopeCutoff = 1.5;
 float lastTime = millis();
 float currentTime = millis();
 const int buttonPin = 2;
+const int flexpin = 0; 
+const int flexCutoff = 600;
+bool handOpen = true;
 
 //filter
 const int numReadings = 50;
@@ -57,7 +61,10 @@ void loop()
   // Muscle sensor value scaled down just for easier working
         //muscle_sensor_scaled = map(muscle_sensor_value, 350, 1023, 0, 1000);
 
-       //filter
+       //
+        flexposition = analogRead(flexpin);
+        Serial.print(flexposition); 
+        
         total = total - readings[readIndex];
         readings[readIndex] = analogRead(muscle_pin);
         total = total + readings[readIndex];
@@ -84,7 +91,29 @@ void loop()
     //  Serial.println(arrayOfTimes[i]);
 
 
-    if( slope(arrayOfDP, arrayOfTimes) > slopeCutoff) // see below for slope fuction
+      if(flexposition > flexCutoff && handOpen)
+      {
+            for(int pos = opened_angle * 2; pos > closed_angle * 2; pos-=2)
+            { // Closes the hand by gradually adjusting the written angle.     
+              servo.write(pos);
+              delay(5);
+            }
+            handOpen == false;
+       }
+
+      if(flexposition < flexCutoff && !handOpen)
+      {
+            for(int pos = closed_angle * 2; pos < opened_angle * 2; pos+=2) 
+          { // Opens the hand by gradually adjusting the written angle.           
+            servo.write(pos);
+            delay(5);
+          }
+            handOpen == false;
+      }
+
+        
+      
+   /* if( slope(arrayOfDP, arrayOfTimes) > slopeCutoff) // see below for slope fuction
       {
         //hand_opened = !hand_opened;
         Serial.println("servo move");
@@ -106,18 +135,18 @@ void loop()
         // Reset the timer
         servo_timer = 0;
         
-      }
+      }*/
   
     currentDP = 0;
   }
-  
+ 
   if (servo_timer < timer_threshold)
     servo_timer++;
   
   // Delay for the servo. Don't want to overload it.
   delay(1);
 
-  
+ 
 }
 
 
