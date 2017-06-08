@@ -1,0 +1,34 @@
+filename = 'C:\Users\Adam\Documents\MATLAB\myo_data\test.txt';
+file_obj = fopen(filename);
+raw_data = [];
+filtered_data = [];
+slope_data = [];
+
+lines = fgetl(file_obj);
+while ischar(lines)
+    if lines(1) == 'r'
+        raw_data = [raw_data; str2double(lines(2:length(lines)))];
+    elseif lines(1) == 'f'
+        filtered_data = [filtered_data; str2double(lines(2:length(lines)))];
+    elseif lines(1) == 's'
+        slope_data = [slope_data; str2double(lines(2:length(lines)))];
+    end
+    
+    lines = fgetl(file_obj);
+end
+
+fclose(file_obj);
+
+figure
+subplot(3,1,1)       % add first plot in 2 x 1 grid
+plot(raw_data)
+title('raw_data')
+
+subplot(3,1,2)       % add second plot in 2 x 1 grid
+plot(filtered_data)       % plot using + markers
+title('filtered_data')
+
+subplot(3,1,3)       % add second plot in 2 x 1 grid
+plot(slope_data)       % plot using + markers
+title('slope_data')
+
