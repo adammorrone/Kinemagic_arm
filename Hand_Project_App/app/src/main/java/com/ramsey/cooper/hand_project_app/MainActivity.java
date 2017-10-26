@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     //Bluetooth stuff
     private BluetoothAdapter myBluetooth = null;
     private Set<BluetoothDevice> pairedDevices;
-    public static String EXTRA_ADDRESS = "devoce_address";
+    public static String EXTRA_ADDRESS = "device_address";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
