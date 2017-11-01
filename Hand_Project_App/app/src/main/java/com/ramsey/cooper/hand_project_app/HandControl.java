@@ -21,9 +21,8 @@ import java.util.UUID;
 
 public class HandControl extends AppCompatActivity {
 
-    Button LEDOnButton, LEDOffButton, LEDDisconnectButton;
-    SeekBar brightnessSeekBar;
-    TextView lumn;
+    Button LEDDisconnectButton;
+    SeekBar servoControlSeekBar;
     String address = null;
     private ProgressDialog progress;
     BluetoothAdapter myBluetooth = null;
@@ -41,32 +40,13 @@ public class HandControl extends AppCompatActivity {
         Intent newint = getIntent();
         address = newint.getStringExtra(MainActivity.EXTRA_ADDRESS); //receive the address of the bluetooth device
 
-        //call the widgtes
-        LEDOnButton = (Button)findViewById(R.id.LEDOnButton);
-        LEDOffButton = (Button)findViewById(R.id.LEDOffButton);
+        //call the widgets
         LEDDisconnectButton = (Button)findViewById(R.id.LEDDisonnectButton);
-        brightnessSeekBar = (SeekBar)findViewById(R.id.brightnessSeekBar);
-        lumn = (TextView)findViewById(R.id.lumn);
+        servoControlSeekBar = (SeekBar)findViewById(R.id.servoControlSeekBar);
 
         new ConnectBT().execute(); //Call the class to connect
 
         //commands to be sent to bluetooth
-        LEDOnButton.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                turnOnLed();      //method to turn on
-            }
-        });
-
-        LEDOffButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                turnOffLed();   //method to turn off
-            }
-        });
 
         LEDDisconnectButton.setOnClickListener(new View.OnClickListener()
         {
@@ -77,19 +57,18 @@ public class HandControl extends AppCompatActivity {
             }
         });
 
-        brightnessSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        servoControlSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser==true)
                 {
-                    lumn.setText(String.valueOf(progress));
                     try
                     {
                         btSocket.getOutputStream().write(String.valueOf(progress).getBytes());
                     }
                     catch (IOException e)
                     {
-
+                        msg("Error");
                     }
                 }
             }
@@ -120,38 +99,6 @@ public class HandControl extends AppCompatActivity {
         }
         finish(); //return to the first layout
 
-    }
-
-    //We can put Arduino Commands here
-    private void turnOffLed()
-    {
-        if (btSocket!=null)
-        {
-            try
-            {
-                btSocket.getOutputStream().write("TF".toString().getBytes());
-            }
-            catch (IOException e)
-            {
-                msg("Error");
-            }
-        }
-    }
-
-    //We can also put arduino commands here
-    private void turnOnLed()
-    {
-        if (btSocket!=null)
-        {
-            try
-            {
-                btSocket.getOutputStream().write("TO".toString().getBytes());
-            }
-            catch (IOException e)
-            {
-                msg("Error");
-            }
-        }
     }
 
     //Calls Toast Faster
