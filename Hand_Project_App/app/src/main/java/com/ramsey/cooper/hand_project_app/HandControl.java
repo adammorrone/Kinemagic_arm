@@ -6,8 +6,10 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,16 +19,20 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 
 public class HandControl extends AppCompatActivity {
 
     Button LEDDisconnectButton;
+    TextView seekBarValueTextView;
     SeekBar servoControlSeekBar;
     String address = null;
     private ProgressDialog progress;
     BluetoothAdapter myBluetooth = null;
     BluetoothSocket btSocket = null;
+    OutputStream outputStream = null;
     private boolean isBtConnected = false;
     //SPP UUID. Look for it
     static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -43,6 +49,8 @@ public class HandControl extends AppCompatActivity {
         //call the widgets
         LEDDisconnectButton = (Button)findViewById(R.id.LEDDisonnectButton);
         servoControlSeekBar = (SeekBar)findViewById(R.id.servoControlSeekBar);
+        servoControlSeekBar.setMax(255);
+        seekBarValueTextView = (TextView) findViewById(R.id.seekBarValueTextView);
 
         new ConnectBT().execute(); //Call the class to connect
 
@@ -62,14 +70,9 @@ public class HandControl extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser==true)
                 {
-                    try
-                    {
-                        btSocket.getOutputStream().write(String.valueOf(progress).getBytes());
-                    }
-                    catch (IOException e)
-                    {
-                        msg("Error");
-                    }
+                        sendData(String.valueOf(progress));
+                        seekBarValueTextView.setText(String.valueOf(progress));
+
                 }
             }
 
@@ -99,6 +102,15 @@ public class HandControl extends AppCompatActivity {
         }
         finish(); //return to the first layout
 
+    }
+
+    private void sendData(String data)
+    {
+        try{
+            outputStream.write(data.getBytes());
+        }catch (IOException e){
+
+        }
     }
 
     //Calls Toast Faster
