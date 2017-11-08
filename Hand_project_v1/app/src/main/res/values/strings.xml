@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Hand_project_v1</string>
+    <string name="paired_devices_list">Select btSerial device from paired devices:</string>
 </resources>
