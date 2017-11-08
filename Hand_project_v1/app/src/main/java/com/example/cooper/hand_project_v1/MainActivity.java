@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -22,6 +23,9 @@ public class MainActivity extends AppCompatActivity {
     //Bluetooth member fields
     private BluetoothAdapter mBtAdapter;
     private ArrayAdapter<String> mPairedDevicesArrayAdapter;
+
+    //An EXTRA to take the device MAC to next activity
+    public static String EXTRA_DEVICE_ADDRESS;
 
     //Method to easily display toasts.
     public void Msg(String message) {
@@ -42,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         //Find and set up the Listview for paired devices
         pairedListView = (ListView) findViewById(R.id.paired_devices);
         pairedListView.setAdapter(mPairedDevicesArrayAdapter);
+        pairedListView.setOnItemClickListener(mDeviceClickListener);
     }
 
     @Override
@@ -89,4 +94,21 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    //set up on-click listener for the ListView
+    private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            textConnectionStatus.setText("Connecting...");
+            //Get the device MAC address, which is the last 17 chars in the view
+            String info = ((TextView) view).getText().toString();
+            String address = info.substring(info.length() - 17);
+
+            //Make intent to start next activity while taking an MAC address extra
+            Intent intent = new Intent(MainActivity.this, ArduinoControl.class);
+            intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
+            startActivity(intent);
+
+        }
+    };
 }
