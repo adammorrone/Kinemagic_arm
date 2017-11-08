@@ -44,6 +44,7 @@ public class ArduinoControl extends AppCompatActivity {
         //Initialising seekbar
         seekbar = (SeekBar) findViewById(R.id.seekbar);
         seekbar_value = (TextView) findViewById(R.id.seekbar_value);
+        seekbar.setMax(255);
 
         //getting the bluetooth adapter value and calling check BT state function
         btAdapter = BluetoothAdapter.getDefaultAdapter();
