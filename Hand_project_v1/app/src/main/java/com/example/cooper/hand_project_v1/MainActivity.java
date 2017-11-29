@@ -36,17 +36,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        textConnectionStatus = (TextView) findViewById(R.id.connecting);
-        textConnectionStatus.setTextSize(40);
-
-        //Initialize array adapter for paired devices
-        mPairedDevicesArrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1);
-
-        //Find and set up the Listview for paired devices
-        pairedListView = (ListView) findViewById(R.id.paired_devices);
-        pairedListView.setAdapter(mPairedDevicesArrayAdapter);
-        pairedListView.setOnItemClickListener(mDeviceClickListener);
     }
 
     @Override
@@ -55,9 +44,22 @@ public class MainActivity extends AppCompatActivity {
 
         checkBTState();
 
-        mPairedDevicesArrayAdapter.clear(); //Clear array adapter so items are not duplicated
+        textConnectionStatus = (TextView) findViewById(R.id.connecting);
+        textConnectionStatus.setTextSize(40);
+        textConnectionStatus.setText(" ");
+
+        //mPairedDevicesArrayAdapter.clear(); //Clear array adapter so items are not duplicated
 
         textConnectionStatus.setText(" ");
+
+        //Initialize array adapter for paired devices
+        mPairedDevicesArrayAdapter =
+                new ArrayAdapter(this, android.R.layout.simple_list_item_1);
+
+        //Find and set up the Listview for paired devices
+        pairedListView = (ListView) findViewById(R.id.paired_devices);
+        pairedListView.setAdapter(mPairedDevicesArrayAdapter);
+        pairedListView.setOnItemClickListener(mDeviceClickListener);
 
         //Get the local Bluetooth adapter
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -72,7 +74,8 @@ public class MainActivity extends AppCompatActivity {
                 mPairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
             }
         } else {
-            mPairedDevicesArrayAdapter.add("No devices paired.");
+            String noDevices = getResources().getText(R.string.none_paired).toString();
+            mPairedDevicesArrayAdapter.add(noDevices);
         }
     }
 

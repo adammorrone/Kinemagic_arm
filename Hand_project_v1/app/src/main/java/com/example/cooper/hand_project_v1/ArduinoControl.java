@@ -4,32 +4,37 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.SeekBar;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
 public class ArduinoControl extends AppCompatActivity {
 
     //Declare Seek bar
-    SeekBar seekbar;
-    TextView seekbar_value;
+    Button send250, send0;
+    Handler bluetoothIn;
 
     //Member Fields
+    final int handlerState = 0; //Used to identify handler message
     private BluetoothAdapter btAdapter = null;
     private BluetoothSocket btSocket = null;
-    private OutputStream outStream = null;
+    //private StringBuilder recDataString = new StringBuilder();
+
+    private ConnectedThread mConnectedThread;
 
     //UUID service - This is the type of bluetooth device our Module
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     //MAC - address of Bluetooth Module
-    public String newAddress = null;
+    private static String address;
 
     //Method to easily display toasts.
     public void Msg(String message) {
@@ -41,31 +46,30 @@ public class ArduinoControl extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_arduino_control);
 
-        //Initialising seekbar
-        seekbar = (SeekBar) findViewById(R.id.seekbar);
-        seekbar_value = (TextView) findViewById(R.id.seekbar_value);
-        seekbar.setMax(255);
+        //Initialising buttons
+        send250 = (Button) findViewById(R.id.data250Button);
+        send0 = (Button) findViewById(R.id.data0Button);
+
+        bluetoothIn = new Handler() {
+            //Code for reading data goes here
+        };
 
         //getting the bluetooth adapter value and calling check BT state function
         btAdapter = BluetoothAdapter.getDefaultAdapter();
         checkBTState();
 
-        //Set seekbar listener
-        seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
-                seekbar_value.setText(Integer.toString(progress));
-                sendData(Integer.toString(progress));
+        // Set up onClick listeners for buttons to send 1 or 0 to turn on/off LED
+        send0.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mConnectedThread.write("0");    // Send "0" via Bluetooth
+                Msg("Sent 0 to Bluetooth");
             }
+        });
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
+        send250.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mConnectedThread.write("250");    // Send "1" via Bluetooth
+                Msg("Sent 250 to Bluetooth");
             }
         });
     }
@@ -76,10 +80,10 @@ public class ArduinoControl extends AppCompatActivity {
 
         //Get MAC address from MainActivity
         Intent intent = getIntent();
-        newAddress = intent.getStringExtra(MainActivity.EXTRA_DEVICE_ADDRESS);
+        address = intent.getStringExtra(MainActivity.EXTRA_DEVICE_ADDRESS);
 
         //Set up a pointer to the remote device using its address
-        BluetoothDevice device = btAdapter.getRemoteDevice(newAddress);
+        BluetoothDevice device = btAdapter.getRemoteDevice(address);
 
         //Attempt to create a bluetooth socket for comms
         try {
@@ -96,16 +100,13 @@ public class ArduinoControl extends AppCompatActivity {
             } catch(IOException e2) {
                 Msg("ERROR - Could not close Bluetooth socket");
             }
+
         }
 
-        //Create a data stream so we can talk to the device
-        try{
-            outStream = btSocket.getOutputStream();
-        } catch(IOException e) {
-            Msg("ERROR - Could not create bluetooth outstream");
-        }
-        //When the activity is resumed, send junk data to force a failure if not connected
-        sendData("x");
+        mConnectedThread = new ConnectedThread(btSocket);
+        mConnectedThread.start();
+
+        mConnectedThread.write("X");
     }
 
     @Override
@@ -145,20 +146,53 @@ public class ArduinoControl extends AppCompatActivity {
         }
     }
 
-    //Method to send data
-    private void sendData(String data) {
-        byte[] dataBuffer = data.getBytes();
+    //Create separate thread for data transfer
+    private class ConnectedThread extends Thread {
+        private final InputStream mmInStream;
+        private final OutputStream mmOutStream;
 
-        try{
-            //attempt to place data in the output stream of the BT device
-            outStream.write(dataBuffer);
-        } catch(IOException e) {
-            Msg("ERROR - Device not found");
-            finish();
+        //create connect thread
+        public ConnectedThread(BluetoothSocket socket){
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
+
+            try{
+                //Create I/O stream for connection
+                tmpIn = socket.getInputStream();
+                tmpOut = socket.getOutputStream();
+            }catch (IOException e){}
+
+            mmInStream = tmpIn;
+            mmOutStream = tmpOut;
         }
+
+        public void run(){
+            byte[] buffer = new byte[256];
+            int bytes;
+
+            //Keep looping while listen for messages
+            while(true){
+                try{
+                    bytes = mmInStream.read(buffer);
+                    String readMessage = new String(buffer, 0, bytes);
+                    bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+                }catch(IOException e){
+                    break;
+                }
+            }
+        }
+
+        public void write(String input){
+            byte[] messageBuffer = input.getBytes();
+            try{
+                mmOutStream.write(messageBuffer);
+            }catch(IOException e){
+                Msg("Connection Failure");
+                finish();
+            }
+        }
+
+
     }
 
-    public void addKeyListener() {
-
-    }
 }
