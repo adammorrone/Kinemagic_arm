@@ -8,10 +8,10 @@
 
 
     <Button
+        android:id="@+id/data250Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Send Data (250)"
-        android:id="@+id/data250Button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -19,14 +19,23 @@
         app:layout_constraintVertical_bias="0.33" />
 
     <Button
+        android:id="@+id/data0Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Send Data (0)"
-        android:id="@+id/data0Button"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.66"/>
+        app:layout_constraintVertical_bias="0.66" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="307dp"
+        android:layout_height="30dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="425dp" />
 
 </android.support.constraint.ConstraintLayout>

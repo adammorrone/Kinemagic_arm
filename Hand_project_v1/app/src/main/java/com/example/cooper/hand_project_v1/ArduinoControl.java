@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class ArduinoControl extends AppCompatActivity {
 
     //Declare Seek bar
+    SeekBar seekBar;
     Button send250, send0;
     Handler bluetoothIn;
 
@@ -49,6 +51,9 @@ public class ArduinoControl extends AppCompatActivity {
         //Initialising buttons
         send250 = (Button) findViewById(R.id.data250Button);
         send0 = (Button) findViewById(R.id.data0Button);
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        seekBar.setMax(180);
+        seekBar.incrementProgressBy(10);
 
         bluetoothIn = new Handler() {
             //Code for reading data goes here
@@ -61,17 +66,42 @@ public class ArduinoControl extends AppCompatActivity {
         // Set up onClick listeners for buttons to send 1 or 0 to turn on/off LED
         send0.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mConnectedThread.write("0");    // Send "0" via Bluetooth
+                mConnectedThread.writeInt(0);    // Send "0" via Bluetooth
                 Msg("Sent 0 to Bluetooth");
             }
         });
 
         send250.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mConnectedThread.write("255");    // Send "1" via Bluetooth
-                Msg("Sent 255 to Bluetooth");
+                mConnectedThread.writeInt(180);    // Send "180" via Bluetooth
+                Msg("Sent 180 to Bluetooth");
             }
         });
+
+        //send data via a seekbar
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                progress = progress / 10; // used for incrimenting seek bar by 10
+                progress = progress * 10; // used for incrimenting seek bar by 10
+                mConnectedThread.writeInt(progress);
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+
     }
 
     @Override
@@ -106,7 +136,7 @@ public class ArduinoControl extends AppCompatActivity {
         mConnectedThread = new ConnectedThread(btSocket);
         mConnectedThread.start();
 
-        mConnectedThread.write("X");
+        mConnectedThread.writeString("X");
     }
 
     @Override
@@ -182,8 +212,18 @@ public class ArduinoControl extends AppCompatActivity {
             }
         }
 
-        public void write(String input){
+        public void writeString(String input){
             byte[] messageBuffer = input.getBytes();
+            try{
+                mmOutStream.write(messageBuffer);
+            }catch(IOException e){
+                Msg("Connection Failure");
+                finish();
+            }
+        }
+
+        public void writeInt(int input){
+            byte messageBuffer = (byte) input;
             try{
                 mmOutStream.write(messageBuffer);
             }catch(IOException e){
