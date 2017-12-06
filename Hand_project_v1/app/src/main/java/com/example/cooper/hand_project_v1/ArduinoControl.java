@@ -68,8 +68,8 @@ public class ArduinoControl extends AppCompatActivity {
 
         send250.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mConnectedThread.write("250");    // Send "1" via Bluetooth
-                Msg("Sent 250 to Bluetooth");
+                mConnectedThread.write("255");    // Send "1" via Bluetooth
+                Msg("Sent 255 to Bluetooth");
             }
         });
     }
