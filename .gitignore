@@ -7,3 +7,6 @@
 /build
 /captures
 .externalNativeBuild
+
+# Ignore extra app files
+/junk_apps
