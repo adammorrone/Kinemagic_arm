@@ -115,3 +115,5 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 }
+
+//TODO reconnect BT whenever app pauses or is stopped. (On resume)

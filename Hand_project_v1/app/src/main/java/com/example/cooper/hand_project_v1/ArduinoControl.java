@@ -67,14 +67,16 @@ public class ArduinoControl extends AppCompatActivity {
         send0.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mConnectedThread.writeInt(0);    // Send "0" via Bluetooth
-                Msg("Sent 0 to Bluetooth");
+                //Msg("Sent 0 to Bluetooth");
+                seekBar.setProgress(0);
             }
         });
 
         send250.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mConnectedThread.writeInt(180);    // Send "180" via Bluetooth
-                Msg("Sent 180 to Bluetooth");
+                //Msg("Sent 180 to Bluetooth");
+                seekBar.setProgress(180);
             }
         });
 
@@ -84,9 +86,10 @@ public class ArduinoControl extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
-                progress = progress / 10; // used for incrimenting seek bar by 10
-                progress = progress * 10; // used for incrimenting seek bar by 10
+                //progress = progress / 10; // used for incrimenting seek bar by 10
+                //progress = progress * 10; // used for incrimenting seek bar by 10
                 mConnectedThread.writeInt(progress);
+                //Clockwise closer to 0, counter clockwise closer to 180.
 
             }
 
@@ -207,6 +210,7 @@ public class ArduinoControl extends AppCompatActivity {
                     String readMessage = new String(buffer, 0, bytes);
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
                 }catch(IOException e){
+                    Msg("An error occurred reading data from the arduino");
                     break;
                 }
             }
