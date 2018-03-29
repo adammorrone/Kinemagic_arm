@@ -1,5 +1,6 @@
 package com.example.cooper.hand_project_v1;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -23,12 +25,13 @@ public class ArduinoControl extends AppCompatActivity {
     SeekBar seekBar;
     Button send250, send0;
     Handler bluetoothIn;
+    TextView ReceivedOutputTextView;
 
     //Member Fields
     final int handlerState = 0; //Used to identify handler message
     private BluetoothAdapter btAdapter = null;
     private BluetoothSocket btSocket = null;
-    //private StringBuilder recDataString = new StringBuilder();
+    private StringBuilder DataString = new StringBuilder();
 
     private ConnectedThread mConnectedThread;
 
@@ -43,21 +46,31 @@ public class ArduinoControl extends AppCompatActivity {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
+    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_arduino_control);
 
         //Initialising buttons
-        send250 = (Button) findViewById(R.id.data250Button);
-        send0 = (Button) findViewById(R.id.data0Button);
-        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        send250 = findViewById(R.id.data250Button);
+        send0 = findViewById(R.id.data0Button);
+        seekBar = findViewById(R.id.seekBar);
         seekBar.setMax(180);
         seekBar.incrementProgressBy(10);
+        ReceivedOutputTextView = findViewById(R.id.ReceivedOutputTextView);
 
         bluetoothIn = new Handler() {
             //Code for reading data goes here
-
+            public void handleMessage(android.os.Message message){
+                if(message.what == handlerState){
+                    String readMessage = (String) message.obj;
+                    DataString.append(readMessage);
+                    int currentLength = DataString.length();
+                    String dataInPrint = DataString.substring(0, currentLength);// extract string
+                    ReceivedOutputTextView.setText(dataInPrint); //set output data to text view
+                }
+            }
         };
 
         //getting the bluetooth adapter value and calling check BT state function
@@ -81,14 +94,14 @@ public class ArduinoControl extends AppCompatActivity {
             }
         });
 
-        //send data via a seekbar
+        //send data via a seek bar
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
-                //progress = progress / 10; // used for incrimenting seek bar by 10
-                //progress = progress * 10; // used for incrimenting seek bar by 10
+                //progress = progress / 10; // used for incrementing seek bar by 10
+                //progress = progress * 10; // used for incrementing seek bar by 10
                 mConnectedThread.writeInt(progress);
                 //Clockwise closer to 0, counter clockwise closer to 180.
 
@@ -119,7 +132,7 @@ public class ArduinoControl extends AppCompatActivity {
         //Set up a pointer to the remote device using its address
         BluetoothDevice device = btAdapter.getRemoteDevice(address);
 
-        //Attempt to create a bluetooth socket for comms
+        //Attempt to create a bluetooth socket for communications
         try {
             btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
         } catch(IOException e1) {

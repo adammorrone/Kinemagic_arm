@@ -43,4 +43,15 @@
         app:layout_constraintTop_toBottomOf="@+id/data250Button"
         app:layout_constraintVertical_bias="0.089" />
 
+    <TextView
+        android:id="@+id/ReceivedOutputTextView"
+        android:layout_width="149dp"
+        android:layout_height="179dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.931"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.915" />
+
 </android.support.constraint.ConstraintLayout>
