@@ -57,6 +57,7 @@ public class ArduinoControl extends AppCompatActivity {
 
         bluetoothIn = new Handler() {
             //Code for reading data goes here
+
         };
 
         //getting the bluetooth adapter value and calling check BT state function
