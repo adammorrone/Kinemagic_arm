@@ -44,12 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
         checkBTState();
 
-        textConnectionStatus = (TextView) findViewById(R.id.connecting);
+        textConnectionStatus = findViewById(R.id.connecting);
         textConnectionStatus.setTextSize(40);
-        textConnectionStatus.setText(" ");
-
-        //mPairedDevicesArrayAdapter.clear(); //Clear array adapter so items are not duplicated
-
         textConnectionStatus.setText(" ");
 
         //Initialize array adapter for paired devices
@@ -57,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
                 new ArrayAdapter(this, android.R.layout.simple_list_item_1);
 
         //Find and set up the Listview for paired devices
-        pairedListView = (ListView) findViewById(R.id.paired_devices);
+        pairedListView = findViewById(R.id.paired_devices);
         pairedListView.setAdapter(mPairedDevicesArrayAdapter);
         pairedListView.setOnItemClickListener(mDeviceClickListener);
 

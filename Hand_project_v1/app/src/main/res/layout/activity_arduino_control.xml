@@ -45,13 +45,15 @@
 
     <TextView
         android:id="@+id/ReceivedOutputTextView"
-        android:layout_width="149dp"
-        android:layout_height="179dp"
+        android:layout_width="134dp"
+        android:layout_height="199dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.931"
+        app:layout_constraintHorizontal_bias="0.936"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.915" />
+        app:layout_constraintVertical_bias="0.948"
+        android:maxLines = "100"
+        android:scrollbars = "vertical"/>
 
 </android.support.constraint.ConstraintLayout>

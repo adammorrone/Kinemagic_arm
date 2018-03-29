@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
@@ -59,6 +61,7 @@ public class ArduinoControl extends AppCompatActivity {
         seekBar.setMax(180);
         seekBar.incrementProgressBy(10);
         ReceivedOutputTextView = findViewById(R.id.ReceivedOutputTextView);
+        ReceivedOutputTextView.setMovementMethod(new ScrollingMovementMethod());
 
         bluetoothIn = new Handler() {
             //Code for reading data goes here
@@ -224,7 +227,7 @@ public class ArduinoControl extends AppCompatActivity {
                     String readMessage = new String(buffer, 0, bytes);
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
                 }catch(IOException e){
-                    Msg("An error occurred reading data from the arduino");
+                    //Msg("An error occurred reading data from the arduino"); //causes an error if called
                     break;
                 }
             }
