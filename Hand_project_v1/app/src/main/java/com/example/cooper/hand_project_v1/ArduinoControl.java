@@ -67,11 +67,12 @@ public class ArduinoControl extends AppCompatActivity {
             //Code for reading data goes here
             public void handleMessage(android.os.Message message){
                 if(message.what == handlerState){
-                    String readMessage = (String) message.obj;
-                    DataString.append(readMessage);
-                    int currentLength = DataString.length();
-                    String dataInPrint = DataString.substring(0, currentLength);// extract string
-                    ReceivedOutputTextView.setText(dataInPrint); //set output data to text view
+                    Double readMessage = (Double) message.obj;
+                    ReceivedOutputTextView.setText(readMessage.toString());
+//                    DataString.append(readMessage); //TODO try this out then put it back
+//                    int currentLength = DataString.length();
+//                    String dataInPrint = DataString.substring(0, currentLength);// extract string
+//                    ReceivedOutputTextView.setText(dataInPrint); //set output data to text view
                 }
             }
         };
