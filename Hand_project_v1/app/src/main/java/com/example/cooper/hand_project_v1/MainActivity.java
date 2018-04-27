@@ -22,7 +22,6 @@ public class MainActivity extends AppCompatActivity {
 
     //Bluetooth member fields
     private BluetoothAdapter mBtAdapter;
-    private ArrayAdapter<String> mPairedDevicesArrayAdapter;
 
     //An EXTRA to take the device MAC to next activity
     public static String EXTRA_DEVICE_ADDRESS;
@@ -49,10 +48,10 @@ public class MainActivity extends AppCompatActivity {
         textConnectionStatus.setText(" ");
 
         //Initialize array adapter for paired devices
-        mPairedDevicesArrayAdapter =
-                new ArrayAdapter(this, android.R.layout.simple_list_item_1);
+        ArrayAdapter<String> mPairedDevicesArrayAdapter =
+                new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
 
-        //Find and set up the Listview for paired devices
+        //Find and set up the List view for paired devices
         pairedListView = findViewById(R.id.paired_devices);
         pairedListView.setAdapter(mPairedDevicesArrayAdapter);
         pairedListView.setOnItemClickListener(mDeviceClickListener);
@@ -98,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
     private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-            textConnectionStatus.setText("Connecting...");
+            textConnectionStatus.setText(R.string.connecting);
             //Get the device MAC address, which is the last 17 chars in the view
             String info = ((TextView) view).getText().toString();
             String address = info.substring(info.length() - 17);

@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
@@ -39,9 +38,6 @@ public class ArduinoControl extends AppCompatActivity {
 
     //UUID service - This is the type of bluetooth device our Module
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
-    //MAC - address of Bluetooth Module
-    private static String address;
 
     //Method to easily display toasts.
     public void Msg(String message) {
@@ -84,7 +80,6 @@ public class ArduinoControl extends AppCompatActivity {
         send0.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mConnectedThread.writeInt(0);    // Send "0" via Bluetooth
-                //Msg("Sent 0 to Bluetooth");
                 seekBar.setProgress(0);
             }
         });
@@ -92,7 +87,6 @@ public class ArduinoControl extends AppCompatActivity {
         send250.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mConnectedThread.writeInt(180);    // Send "180" via Bluetooth
-                //Msg("Sent 180 to Bluetooth");
                 seekBar.setProgress(180);
             }
         });
@@ -130,7 +124,7 @@ public class ArduinoControl extends AppCompatActivity {
 
         //Get MAC address from MainActivity
         Intent intent = getIntent();
-        address = intent.getStringExtra(MainActivity.EXTRA_DEVICE_ADDRESS);
+        String address = intent.getStringExtra(MainActivity.EXTRA_DEVICE_ADDRESS);
 
         //Set up a pointer to the remote device using its address
         BluetoothDevice device = btAdapter.getRemoteDevice(address);
@@ -202,7 +196,7 @@ public class ArduinoControl extends AppCompatActivity {
         private final OutputStream mmOutStream;
 
         //create connect thread
-        public ConnectedThread(BluetoothSocket socket){
+        private ConnectedThread(BluetoothSocket socket){
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
 
@@ -210,7 +204,10 @@ public class ArduinoControl extends AppCompatActivity {
                 //Create I/O stream for connection
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
-            }catch (IOException e){}
+            }catch (IOException e){
+                //Arduino connection failure
+                Msg("The arduino could not transmit information.");
+            }
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
@@ -227,13 +224,12 @@ public class ArduinoControl extends AppCompatActivity {
                     String readMessage = new String(buffer, 0, bytes);
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
                 }catch(IOException e){
-                    //Msg("An error occurred reading data from the arduino"); //causes an error if called
                     break;
                 }
             }
         }
 
-        public void writeString(String input){
+        private void writeString(String input){
             byte[] messageBuffer = input.getBytes();
             try{
                 mmOutStream.write(messageBuffer);

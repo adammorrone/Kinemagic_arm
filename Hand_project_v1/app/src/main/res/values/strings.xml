@@ -2,4 +2,5 @@
     <string name="app_name">Hand_project_v1</string>
     <string name="paired_devices_list">Select btSerial device from paired devices:</string>
     <string name="none_paired">No Devices Paired</string>
+    <string name="connecting">Connecting\u2026</string>
 </resources>
